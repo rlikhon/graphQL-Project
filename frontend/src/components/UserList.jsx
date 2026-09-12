@@ -7,18 +7,27 @@ import EditUserModal from './EditUserModal';
 import DeleteUserModal from './DeleteUserModal';
 
 const UserList = () => {
-  const { loading, error, data, refetch } = useQuery(GET_USERS);
+  const [page, setPage] = useState(1);
+  const PAGE_LIMIT = 3;
+
+  const { loading, error, data, refetch } = useQuery(GET_USERS, {
+    variables: {
+      page: page,
+      limit: PAGE_LIMIT
+    }
+  });
 
   const [show, setShow] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   
-  
   const handleShow = () => setShow(true);
+  
+  if (loading) return <p className="text-center mt-4">Loading...</p>;
+  if (error) return <p className="text-center mt-4 text-danger">Error: {error.message}</p>;
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error.message}</p>;
+  const { docs, totalDocs, totalPages, currentPage } = data.getUsers;
 
   const handleEditClick = (user) => {
     setSelectedUser(user);
@@ -61,9 +70,9 @@ const UserList = () => {
                 </tr>
             </thead>
             <tbody>
-                {data.getUsers.map((user, index) => (
-                    <tr key={index}>
-                        <td>{index + 1}</td>
+                {docs.map((user, index) => (
+                    <tr key={user.id}>                        
+                        <td>{(currentPage - 1) * PAGE_LIMIT + index + 1}</td>
                         <td>{user.name}</td>
                         <td>{user.email}</td>
                         <td><span>{new Date(Number(user.createdAt)).toLocaleString()}</span></td>
@@ -85,6 +94,23 @@ const UserList = () => {
                 ))}
             </tbody>
         </Table>
+      </div>
+      <div className="d-flex container justify-content-center align-items-center mb-4">
+        <button
+          className="btn btn-primary me-2"
+          onClick={() => setPage((p) => p - 1)}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </button>
+        <span>Page {currentPage} of {totalPages}</span>
+        <button
+          className="btn btn-primary ms-2"
+          onClick={() => setPage((p) => p + 1)}
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </button>
       </div>
       <div className="d-flex container justify-content-center mb-4">
         {show && (
@@ -113,7 +139,6 @@ const UserList = () => {
           />
         )}
       </div>    
-        
     </div>
   )
 }
