@@ -1,10 +1,12 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {Table, Button} from 'react-bootstrap';
-import {useQuery, useMutation} from '@apollo/client/react'
+import {useQuery, useMutation, useSubscription} from '@apollo/client/react'
 import { GET_USERS } from '../graphql/queries'
 import UserModal from './UserModal';
 import EditUserModal from './EditUserModal';
 import DeleteUserModal from './DeleteUserModal';
+
+import { USER_CREATED_SUBSCRIPTION } from '../graphql/subdcription';
 
 const UserList = () => {
   const [page, setPage] = useState(1);
@@ -16,6 +18,15 @@ const UserList = () => {
       limit: PAGE_LIMIT
     }
   });
+
+  const { data: subscriptionData } = useSubscription(USER_CREATED_SUBSCRIPTION);
+
+  useEffect(() => {
+    if (subscriptionData) {
+      console.log('subscriptionData:', subscriptionData.userCreated);
+      refetch();
+    }
+  }, [subscriptionData, refetch]);
 
   const [show, setShow] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
